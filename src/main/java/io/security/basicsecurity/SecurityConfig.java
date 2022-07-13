@@ -63,11 +63,13 @@ public class SecurityConfig {
         http
                 .formLogin();
 
+
+        /*
         //csrf
         http
                 .csrf();
 
-        /*
+
         //exceptionTranslation
         http
                 .formLogin()
@@ -94,6 +96,8 @@ public class SecurityConfig {
                         response.sendRedirect("/denied");
                     }
                 });
+
+
         //authorization
         http
                 .authorizeRequests()
@@ -102,6 +106,8 @@ public class SecurityConfig {
                 .antMatchers("/admin/pay").hasRole("ADMIN")
                 .antMatchers("/admin/**").access("hasRole('ADMIN') or hasRole('SYS')")
                 .anyRequest().authenticated();
+
+
         //concurrent session control
         http
                 .sessionManagement()
@@ -117,6 +123,7 @@ public class SecurityConfig {
         http
                 .sessionManagement()
                 .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED); //SessionCreationPolicy.STATELESS
+
 
         //logout, remember-me
         http
@@ -142,6 +149,7 @@ public class SecurityConfig {
                 .rememberMeParameter("remember")
                 .tokenValiditySeconds(3600)
                 .userDetailsService(userDetailsService);
+
 
         //form login 인증
         http

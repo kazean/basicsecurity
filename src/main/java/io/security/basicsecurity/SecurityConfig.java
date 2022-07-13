@@ -7,9 +7,15 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.factory.PasswordEncoderFactories;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
@@ -32,17 +38,52 @@ import java.io.IOException;
 @EnableWebSecurity
 public class SecurityConfig {
 
-    @Autowired
-    UserDetailsService userDetailsService;
+//    @Autowired
+//    UserDetailsService userDetailsService;
 
     @Bean
+    public UserDetailsService userDetailsService() {
+        User.UserBuilder userBuilder = User.builder();
+        UserDetails user = userBuilder.username("user").password("{noop}1111").roles("USER").build();
+        UserDetails sys = userBuilder.username("sys").password("{noop}1111").roles("SYS","USER").build();
+        UserDetails admin = userBuilder.username("admin").password("{noop}1111").roles("ADMIN","SYS","USER").build();
+
+        return new InMemoryUserDetailsManager(user, sys, admin);
+
+    }
+    @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http
-                .authorizeRequests()
-                .anyRequest().authenticated();
+//        http
+//                .authorizeRequests()
+//                .anyRequest().authenticated();
         http
                 .formLogin();
+        http
+                .authorizeRequests()
+                .antMatchers("/user").hasRole("USER")
+                .antMatchers("/admin/pay").hasRole("ADMIN")
+                .antMatchers("/admin/**").access("hasRole('ADMIN') or hasRole('SYS')")
+                .anyRequest().authenticated();
 
+        /*
+        //concurrent session control
+        http
+                .sessionManagement()
+                .maximumSessions(1)
+                .maxSessionsPreventsLogin(false);
+
+        //session fixation prevent
+        http
+                .sessionManagement()
+                .sessionFixation().changeSessionId(); //none, migrateSession, newSession
+
+        //session policy
+        http
+                .sessionManagement()
+                .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED); //SessionCreationPolicy.STATELESS
+        */
+
+        /*
         //logout, remember-me
         http
                 .logout()
@@ -67,7 +108,7 @@ public class SecurityConfig {
                 .rememberMeParameter("remember")
                 .tokenValiditySeconds(3600)
                 .userDetailsService(userDetailsService);
-
+        */
         /*
         //form login 인증
         http
@@ -96,7 +137,6 @@ public class SecurityConfig {
                 })
                 .permitAll();
         */
-
 
         return http.build();
     }

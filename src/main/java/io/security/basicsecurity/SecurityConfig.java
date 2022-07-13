@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
@@ -16,11 +17,15 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
+import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.logout.LogoutHandler;
 import org.springframework.security.web.authentication.logout.LogoutSuccessHandler;
+import org.springframework.security.web.savedrequest.HttpSessionRequestCache;
+import org.springframework.security.web.savedrequest.SavedRequest;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -35,7 +40,6 @@ import java.io.IOException;
  */
 @Slf4j
 @Configuration
-@EnableWebSecurity
 public class SecurityConfig {
 
 //    @Autowired
@@ -53,19 +57,51 @@ public class SecurityConfig {
     }
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-//        http
-//                .authorizeRequests()
-//                .anyRequest().authenticated();
-        http
-                .formLogin();
         http
                 .authorizeRequests()
+                .anyRequest().authenticated();
+        http
+                .formLogin();
+
+        //csrf
+        http
+                .csrf();
+
+        /*
+        //exceptionTranslation
+        http
+                .formLogin()
+                .successHandler(new AuthenticationSuccessHandler() {
+                    @Override
+                    public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
+                        HttpSessionRequestCache requestCache = new HttpSessionRequestCache();
+                        SavedRequest savedRequest = requestCache.getRequest(request, response);
+                        String redirectUrl = savedRequest.getRedirectUrl();
+                        response.sendRedirect(redirectUrl);
+                    }
+                });
+        http
+                .exceptionHandling()
+//                .authenticationEntryPoint(new AuthenticationEntryPoint() {
+//                    @Override
+//                    public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException) throws IOException, ServletException {
+//                        response.sendRedirect("/login");
+//                    }
+//                })
+                .accessDeniedHandler(new AccessDeniedHandler() {
+                    @Override
+                    public void handle(HttpServletRequest request, HttpServletResponse response, AccessDeniedException accessDeniedException) throws IOException, ServletException {
+                        response.sendRedirect("/denied");
+                    }
+                });
+        //authorization
+        http
+                .authorizeRequests()
+                .antMatchers("/login").permitAll()
                 .antMatchers("/user").hasRole("USER")
                 .antMatchers("/admin/pay").hasRole("ADMIN")
                 .antMatchers("/admin/**").access("hasRole('ADMIN') or hasRole('SYS')")
                 .anyRequest().authenticated();
-
-        /*
         //concurrent session control
         http
                 .sessionManagement()
@@ -81,9 +117,7 @@ public class SecurityConfig {
         http
                 .sessionManagement()
                 .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED); //SessionCreationPolicy.STATELESS
-        */
 
-        /*
         //logout, remember-me
         http
                 .logout()
@@ -108,8 +142,7 @@ public class SecurityConfig {
                 .rememberMeParameter("remember")
                 .tokenValiditySeconds(3600)
                 .userDetailsService(userDetailsService);
-        */
-        /*
+
         //form login 인증
         http
                 .formLogin()

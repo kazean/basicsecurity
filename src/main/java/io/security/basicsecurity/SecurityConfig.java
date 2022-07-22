@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -34,10 +35,11 @@ import javax.servlet.http.HttpSession;
 import java.io.IOException;
 
 /**
- * Deprecated abstract WebSecurityConfigurerAdapter
- *
- *
+ * @Deprecated
+ * @EnableWebSecurity
+ * extends Deprecated abstract WebSecurityConfigurerAdapter
  */
+
 @Slf4j
 @Configuration
 public class SecurityConfig {
@@ -45,6 +47,7 @@ public class SecurityConfig {
 //    @Autowired
 //    UserDetailsService userDetailsService;
 
+    /*
     @Bean
     public UserDetailsService userDetailsService() {
         User.UserBuilder userBuilder = User.builder();
@@ -53,10 +56,26 @@ public class SecurityConfig {
         UserDetails admin = userBuilder.username("admin").password("{noop}1111").roles("ADMIN","SYS","USER").build();
 
         return new InMemoryUserDetailsManager(user, sys, admin);
-
     }
+    */
+
+    /*
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    @Order(0)
+    public SecurityFilterChain filterChain0(HttpSecurity http) throws Exception{
+        http
+                .antMatcher("/admin/**")
+                .authorizeRequests()
+                .anyRequest().authenticated()
+            .and()
+                .httpBasic();
+        return http.build();
+    }
+    */
+
+    @Bean
+    @Order(1)
+    public SecurityFilterChain filterChain1(HttpSecurity http) throws Exception {
         http
                 .authorizeRequests()
                 .anyRequest().authenticated();

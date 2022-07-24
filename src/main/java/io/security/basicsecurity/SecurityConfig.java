@@ -73,8 +73,8 @@ public class SecurityConfig {
     }
     */
 
+//    @Order(1)
     @Bean
-    @Order(1)
     public SecurityFilterChain filterChain1(HttpSecurity http) throws Exception {
         http
                 .authorizeRequests()
